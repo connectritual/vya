@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta charset="utf-8">
+        <title>Travel modes in directions</title>
+        <style>
+            html, body, #map-canvas {
+                height: 100%;
+                margin: 0px;
+                padding: 0px
+            }
+            #panel {
+                position: absolute;
+                top: 5px;
+                left: 50%;
+                margin-left: -180px;
+                z-index: 5;
+                background-color: #fff;
+                padding: 5px;
+                border: 1px solid #999;
+            }
+        </style>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places"></script>
+        <script src="/vya/SQLike.js"></script>
+
+        <script>
+            var directionsDisplay;
+            var directionsService = new google.maps.DirectionsService();
+            var map;
+            var haight = new google.maps.LatLng(37.7699298, -122.4469157);
+            var oceanBeach = new google.maps.LatLng(37.7683909618184, -122.51089453697205);
+            var infowindow;
+            var initialLocation;
+            var destination = new google.maps.LatLng(34.1195032, -84.1113094);;
+
+            function initialize() {
+                directionsDisplay = new google.maps.DirectionsRenderer();
+                var mapOptions = {
+                    zoom: 14,
+                    center: haight
+                };
+                map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+                // map = new google.maps.Map(document.getElementById('map-canvas'));
+                // directionsDisplay.setMap(map);
+                setCurrentLocation(map);
+
+                //  setPalacBasedOnSerch(map);
+
+            }
+
+            function setPalacBasedOnSerch(map) {
+                // delay(1000);
+                console.log(initialLocation);
+                var request = {
+                    location: initialLocation,
+                    radius: 8000,
+                    query: 'Kroger store'
+                };
+                infowindow = new google.maps.InfoWindow();
+                var service = new google.maps.places.PlacesService(map);
+                service.textSearch(request, callback);
+            }
+
+            function callback(results, status) {
+                console.log(results);
+                removeRedundantAddress(results) 
+                if (status == google.maps.places.PlacesServiceStatus.OK) {
+                    for (var i = 0; i < results.length; i++) {
+                        createMarker(results[i], i);
+                    }
+                }
+            }
+ 
+            function removeRedundantAddress(results) {
+//             var queryResult =   SQLike.q(
+//                        {
+//                            SelectDistinct: ['formatted_address'],
+//                            From: results,
+//                            OrderBy: ['formatted_address']
+//                        }
+//                );
+//
+//           var queryResult1 =   SQLike.q(
+//                        {
+//                             Select: ['formatted_address','geometry','name','place_id'],
+//                            From: results,
+//                            where:function(){return this.formatted_address.indexOf("Cobb") > -1}
+//                        }
+//                );
+//
+//        
+//        var queryResult2 =   SQLike.q(
+//                        {
+//                          
+//                             Unpack: results,
+//                                 Columns: ['formatted_address','D','k','name','place_id']
+//                        }
+//                );
+//
+//        
+
+            }
+
+
+            function setCurrentMarkImage(latLng) {
+
+
+                var image = new google.maps.MarkerImage(
+                        'http://plebeosaur.us/etc/map/bluedot_retina.png',
+                        null, // size
+                        null, // origin
+                        new google.maps.Point(8, 8), // anchor (move to center of marker)
+                        new google.maps.Size(17, 17) // scaled size (required for Retina display icon)
+                        );
+
+                // then create the new marker
+                myMarker = new google.maps.Marker({
+                    flat: true,
+                    icon: image,
+                    map: map,
+                    optimized: false,
+                    position: latLng,
+                    title: 'I might be here',
+                    visible: true
+                });
+            }
+
+            function createMarker(place, i) {
+                var placeLoc = place.geometry.location;
+                var marker = new google.maps.Marker({
+                    map: map,
+                    position: place.geometry.location
+                });
+
+                google.maps.event.addListener(marker, 'click', function () {
+                    infowindow.setContent(i + " " + place.name);
+                    infowindow.open(map, this);
+                });
+            }
+
+
+
+            function setCurrentLocation(map) {
+
+                if (navigator.geolocation) {
+                    browserSupportFlag = true;
+                    navigator.geolocation.getCurrentPosition(function (position) {
+                        initialLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                        map.setCenter(initialLocation);
+                        setCurrentMarkImage(initialLocation);
+                        setCurrentMarkImage(destination);
+                        setPalacBasedOnSerch(map);
+                    }, function () {
+                        handleNoGeolocation(browserSupportFlag);
+                    });
+                }
+                // Browser doesn't support Geolocation
+                else {
+                    browserSupportFlag = false;
+                    handleNoGeolocation(browserSupportFlag);
+                }
+
+            }
+
+
+            function calcRoute() {
+                var selectedMode = document.getElementById('mode').value;
+                var request = {
+                    origin: "3697 river height crossing marietta georgia 30067",
+                    //destination: "700 James Burgess Road, Suwanee, GA 30024",
+                    destination: "Store walmart",
+                    /*waypoints: [
+                     {
+                     location:"walmart",
+                     stopover: true
+                     }],*/
+                    provideRouteAlternatives: false,
+                    travelMode: google.maps.TravelMode.DRIVING
+                };
+                directionsService.route(request, function (response, status) {
+                    if (status == google.maps.DirectionsStatus.OK) {
+                        directionsDisplay.setDirections(response);
+                    }
+                });
+            }
+
+            google.maps.event.addDomListener(window, 'load', initialize);
+
+        </script>
+    </head>
+    <body>
+        <div id="panel">
+            <b>Mode of Travel: </b>
+            <select id="mode" onchange="calcRoute();">
+                <option value="DRIVING">Driving</option>
+                <option value="WALKING">Walking</option>
+                <option value="BICYCLING">Bicycling</option>
+                <option value="TRANSIT">Transit</option>
+            </select>
+        </div>
+        <div id="map-canvas">
+        </div>
+    </body>
+</html>

@@ -1,0 +1,27 @@
+
+get the distance with waypounts
+https://maps.googleapis.com/maps/api/directions/json?origin=&destination=Adelaide,SA&waypoints=optimize:true|Barossa+Valley,SA|Clare,SA|Connawarra,SA|McLaren+Vale,SA
+
+
+get the diatnce matrix
+
+https://maps.googleapis.com/maps/api/distancematrix/json?origins=Vancouver+BC|Seattle&destinations=San+Francisco|Victoria+BC&mode=bicycling&language=fr-FR
+
+https://maps.googleapis.com/maps/api/distancematrix/json?origins=Vancouver+BC|Seattle&destinations=San+Francisco|Victoria+BC&mode=bicycling&language=fr-FR
+
+geo locatin
+
+http://maps.google.com/maps/api/geocode/json?address=3697+river+height+crossing+marietta+ga+30067&sensor=false
+ "lat" : 33.9308089,
+                  "lng" : -84.43382339999999
+
+http://maps.google.com/maps/api/geocode/json?address=700+JamesBurgess+Road+Suwane+GA+30024
+"lat" : 34.1195032,
+               "lng" : -84.1113094
+
+home to sai teample
+https://maps.googleapis.com/maps/api/distancematrix/json?origins=33.9308089,-84.43382339999999&destinations=34.1195032,-84.1113094
+
+https://maps.googleapis.com/maps/api/distancematrix/json?origins=33.9308089,-84.43382339999999&destinations=34.1195032,-84.1113094&waypoints=walmart
+
+
