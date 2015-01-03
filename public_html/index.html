@@ -27,12 +27,14 @@
         <script>
             var directionsDisplay;
             var directionsService = new google.maps.DirectionsService();
-            var map;
+            var map, placesList;
             var haight = new google.maps.LatLng(37.7699298, -122.4469157);
             var oceanBeach = new google.maps.LatLng(37.7683909618184, -122.51089453697205);
             var infowindow;
             var initialLocation;
-            var destination = new google.maps.LatLng(34.1195032, -84.1113094);;
+            var destination = new google.maps.LatLng(33.9056022, -84.4596002);
+            var viaPalace =[];
+            
 
             function initialize() {
                 directionsDisplay = new google.maps.DirectionsRenderer();
@@ -43,9 +45,11 @@
                 map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
                 // map = new google.maps.Map(document.getElementById('map-canvas'));
                 // directionsDisplay.setMap(map);
+                      placesList = document.getElementById('places');
                 setCurrentLocation(map);
 
                 //  setPalacBasedOnSerch(map);
+          
 
             }
 
@@ -53,25 +57,33 @@
                 // delay(1000);
                 console.log(initialLocation);
                 var request = {
-                    location: initialLocation,
-                    radius: 8000,
-                    query: 'Kroger store'
+                    //location: initialLocation,
+                    bounds: new google.maps.LatLngBounds(destination,initialLocation),
+                   // radius: 50000,
+                    query: 'Kroger store',
                 };
                 infowindow = new google.maps.InfoWindow();
                 var service = new google.maps.places.PlacesService(map);
                 service.textSearch(request, callback);
             }
 
-            function callback(results, status) {
+            function callback(results, status, pagination) {
                 console.log(results);
-                removeRedundantAddress(results) 
+                removeRedundantAddress(results)
                 if (status == google.maps.places.PlacesServiceStatus.OK) {
                     for (var i = 0; i < results.length; i++) {
+                        viaPalace.push(results[i].geometry.location);
                         createMarker(results[i], i);
                     }
                 }
+                if (pagination.hasNextPage) {
+                    pagination.nextPage();
+                }else{
+                     calculateDistances();
+                }
+                    
             }
- 
+
             function removeRedundantAddress(results) {
 //             var queryResult =   SQLike.q(
 //                        {
@@ -137,6 +149,9 @@
                     infowindow.setContent(i + " " + place.name);
                     infowindow.open(map, this);
                 });
+
+                placesList.innerHTML += '<li>' + i + " " + place.name + " " + place.formatted_address + '</li>';
+
             }
 
 
@@ -151,6 +166,7 @@
                         setCurrentMarkImage(initialLocation);
                         setCurrentMarkImage(destination);
                         setPalacBasedOnSerch(map);
+                       
                     }, function () {
                         handleNoGeolocation(browserSupportFlag);
                     });
@@ -185,21 +201,139 @@
                 });
             }
 
+
+            function calculateDistances() {
+                var service = new google.maps.DistanceMatrixService();
+                service.getDistanceMatrix(
+                        {
+                            origins: [initialLocation],
+                            destinations: viaPalace.slice(0,10),
+                            travelMode: google.maps.TravelMode.DRIVING,
+                            unitSystem: google.maps.UnitSystem.IMPERIAL,
+                            avoidHighways: false,
+                            avoidTolls: false
+                        }, callbackDistance);
+            }
+
+            function callbackDistance(response, status) {
+                if (status != google.maps.DistanceMatrixStatus.OK) {
+                    alert('Error was: ' + status);
+                } else {
+                    var origins = response.originAddresses;
+                    var destinations = response.destinationAddresses;
+                    var outputDiv = document.getElementById('outputDivplaces');
+                    outputDiv.innerHTML = '';
+                  //  deleteOverlays();
+
+                    for (var i = 0; i < origins.length; i++) {
+                        var results = response.rows[i].elements;
+                       // addMarker(origins[i], false);
+                        for (var j = 0; j < results.length; j++) {
+                         //   addMarker(destinations[j], true);
+                            outputDiv.innerHTML += '<li>' + origins[i] + ' to ' + destinations[j]
+                                    + ': ' + results[j].distance.text + ' in '
+                                    + results[j].duration.text + '</li>';
+                        }
+                    }
+                }
+            }
+
+
+
+
             google.maps.event.addDomListener(window, 'load', initialize);
 
         </script>
+
+        <style>
+            #results {
+                font-family: Arial, Helvetica, sans-serif;
+                position: absolute;
+                right: 5px;
+                top: 50%;
+                margin-top: -195px;
+                height: 380px;
+                width: 200px;
+                padding: 5px;
+                z-index: 5;
+                border: 1px solid #999;
+                background: #fff;
+            }
+            h2 {
+                font-size: 22px;
+                margin: 0 0 5px 0;
+            }
+            ul {
+                list-style-type: none;
+                padding: 0;
+                margin: 0;
+                height: 321px;
+                width: 200px;
+                overflow-y: scroll;
+            }
+            li {
+                background-color: #f1f1f1;
+                padding: 10px;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+               // overflow: hidden;
+            }
+            li:nth-child(odd) {
+                background-color: #fcfcfc;
+            }
+            #more {
+                width: 100%;
+                margin: 5px 0 0 0;
+            }
+            #input {
+                font-family: Arial, Helvetica, sans-serif;
+                position: absolute;
+                right: 5px;
+                top: 10%;
+                //margin-top: -195px;
+                //height: 380px;
+                width: 200px;
+                padding: 5px;
+                z-index: 5;
+                //border: 1px solid #999;
+                // background: #fff;
+            }
+            
+             #outputDiv {
+                font-family: Arial, Helvetica, sans-serif;
+                position: absolute;
+                right: 5px;
+                top: 75%;
+                margin-top: -195px;
+                height: 380px;
+                width: 200px;
+                padding: 5px;
+                z-index: 5;
+                border: 1px solid #999;
+                background: #fff;
+            }
+
+        </style>
     </head>
     <body>
-        <div id="panel">
-            <b>Mode of Travel: </b>
-            <select id="mode" onchange="calcRoute();">
-                <option value="DRIVING">Driving</option>
-                <option value="WALKING">Walking</option>
-                <option value="BICYCLING">Bicycling</option>
-                <option value="TRANSIT">Transit</option>
-            </select>
-        </div>
+
         <div id="map-canvas">
         </div>
+        <div id="results">
+            <h2>Results</h2>
+            <ul id="places"></ul>
+            <!--button id="more">More results</button-->
+        </div>
+        <div id="input">
+            <input type="text" id="Start_location">
+            <input type="text" id="Destination_location">
+            <button id="search">GO</button>
+        </div>
+        
+        <div id="outputDiv">
+            <h2>Output</h2>
+            <ul id="outputDivplaces"></ul>
+        </div>
+        
     </body>
 </html>
