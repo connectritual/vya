@@ -72,7 +72,7 @@
                     //location: initialLocation,
                     bounds: new google.maps.LatLngBounds(destination, initialLocation),
                     // radius: 50000,
-                    query: 'Kroger store',
+                    query: 'walmart',
                 };
                 infowindow = new google.maps.InfoWindow();
                 var service = new google.maps.places.PlacesService(map);
@@ -216,18 +216,62 @@
 
             function calculateDistances() {
                 var service = new google.maps.DistanceMatrixService();
+                var tempViaPalace = viaPalace.slice(0, 10);
                 service.getDistanceMatrix(
                         {
                             origins: [initialLocation],
-                            destinations: viaPalace.slice(0, 10),
+                            destinations: tempViaPalace,
                             travelMode: google.maps.TravelMode.DRIVING,
                             unitSystem: google.maps.UnitSystem.IMPERIAL,
                             avoidHighways: false,
                             avoidTolls: false
-                        }, callbackDistance);
+                        }, callbackDistanceStart);
+                        
+                
+                  service.getDistanceMatrix(
+                        {
+                            origins: tempViaPalace,
+                            destinations: [destination],
+                            travelMode: google.maps.TravelMode.DRIVING,
+                            unitSystem: google.maps.UnitSystem.IMPERIAL,
+                            avoidHighways: false,
+                            avoidTolls: false
+                        }, callbackDistanceEnd);
+                
+                        CreateTable(startLocToViaDistanceTime)
+                        
             }
+            
+            
 
-            function callbackDistance(response, status) {
+            function callbackDistanceEnd(response, status) {
+                if (status != google.maps.DistanceMatrixStatus.OK) {
+                    alert('Error was: ' + status);
+                } else {
+                    var origins = response.originAddresses;
+                    var destinations = response.destinationAddresses;
+                    var outputDiv = document.getElementById('outputDivplaces');
+                   // outputDiv.innerHTML = '';
+                    //  deleteOverlays();
+
+                    for (var i = 0; i < origins.length; i++) {
+                        var results = response.rows[i].elements;
+                        // addMarker(origins[i], false);
+                        for (var j = 0; j < results.length; j++) {
+                            //   addMarker(destinations[j], true);
+                           // outputDiv.innerHTML += '<li>' + origins[i] + ' to ' + destinations[j]
+                            //        + ': ' + results[j].distance.text + ' in '
+                            //        + results[j].duration.text + '</li>'; 
+                            startLocToViaDistanceTime.push(["-",origins[i],destinations[j],results[j].distance.text,results[j].duration.text]);
+                        }
+                    }
+                  
+                }
+            }
+            
+
+            
+             function callbackDistanceStart(response, status) {
                 if (status != google.maps.DistanceMatrixStatus.OK) {
                     alert('Error was: ' + status);
                 } else {
@@ -241,31 +285,34 @@
                         var results = response.rows[i].elements;
                         // addMarker(origins[i], false);
                         for (var j = 0; j < results.length; j++) {
-                            //   addMarker(destinations[j], true);
-                            outputDiv.innerHTML += '<li>' + origins[i] + ' to ' + destinations[j]
-                                    + ': ' + results[j].distance.text + ' in '
-                                    + results[j].duration.text + '</li>'; 
-                            startLocToViaDistanceTime.push([origins[i],destinations[j],results[j].distance.text,results[j].duration.text]);
+                               addMarker(destinations[j], true);
+                           // outputDiv.innerHTML += '<li>' + origins[i] + ' to ' + destinations[j]
+                               //     + ': ' + results[j].distance.text + ' in '
+                                  //  + results[j].duration.text + '</li>'; 
+                            startLocToViaDistanceTime.push([origins[i],destinations[j]," ",results[j].distance.text,results[j].duration.text]);
                         }
                     }
-                    CreateTable(startLocToViaDistanceTime)
+                   
                 }
             }
-
+            
+    
             function CreateTable(startLocToViaDistanceTime) {
                
-               
-               $('#dataGrid').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="datatable"></table>' );
- startLocToViaDistanceTime.shift();
+               if( $('#datatable') != null )
+                      $('#dataGrid').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="datatable"></table>' );
+ 
                $('#datatable').dataTable( {
                     "aaData": startLocToViaDistanceTime ,
+                     "paging": false,
                     "aoColumns": [
                         { "sTitle": "StartLocation" },
                         { "sTitle": "ViaPoint" },
                         { "sTitle": "EndLocation" },
-                        { "sTitle": "Time", "class": "center" },
-                        { "sTitle": "Distance", "class": "center" }
-                    ]
+                        { "sTitle": "Distance", "class": "center" },
+                        { "sTitle": "Time", "class": "center" }
+                      ],
+                     "aaSorting": [[ 3, "asc" ]] 
                 } );
         
     /*    $('#datatable').dataTable( {
