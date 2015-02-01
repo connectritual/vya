@@ -213,11 +213,14 @@
                 });
             }
 
+            var callbackDistanceStartDef = $.Deferred();
+            var callbackDistanceEndDef = $.Deferred();
 
+             
             function calculateDistances() {
                 var service = new google.maps.DistanceMatrixService();
                 var tempViaPalace = viaPalace.slice(0, 10);
-                service.getDistanceMatrix(
+                var t =service.getDistanceMatrix(
                         {
                             origins: [initialLocation],
                             destinations: tempViaPalace,
@@ -238,14 +241,19 @@
                             avoidTolls: false
                         }, callbackDistanceEnd);
                 
-                        CreateTable(startLocToViaDistanceTime)
+                  when(callbackDistanceEndDef,callbackDistanceStartDef).then (function(  ) {
+  CreateTable(startLocToViaDistanceTime);
+});
+                          
+                
+               
                         
             }
             
             
 
             function callbackDistanceEnd(response, status) {
-                if (status != google.maps.DistanceMatrixStatus.OK) {
+                if (status !== google.maps.DistanceMatrixStatus.OK) {
                     alert('Error was: ' + status);
                 } else {
                     var origins = response.originAddresses;
@@ -267,12 +275,13 @@
                     }
                   
                 }
+                callbackDistanceEndDef.resolve();
             }
             
 
             
              function callbackDistanceStart(response, status) {
-                if (status != google.maps.DistanceMatrixStatus.OK) {
+                if (status !== google.maps.DistanceMatrixStatus.OK) {
                     alert('Error was: ' + status);
                 } else {
                     var origins = response.originAddresses;
@@ -294,6 +303,7 @@
                     }
                    
                 }
+                callbackDistanceSTartDef.resolve();
             }
             
     
