@@ -45,7 +45,7 @@
             var initialLocation;
             var destination = new google.maps.LatLng(33.9056022, -84.4596002);
             var viaPalace = [];
-            var startLocToViaDistanceTime =[[]];
+            var startLocToViaDistanceTime =[];
 
 
             function initialize() {
@@ -96,36 +96,7 @@
 
             }
 
-            function removeRedundantAddress(results) {
-//             var queryResult =   SQLike.q(
-//                        {
-//                            SelectDistinct: ['formatted_address'],
-//                            From: results,
-//                            OrderBy: ['formatted_address']
-//                        }
-//                );
-//
-//           var queryResult1 =   SQLike.q(
-//                        {
-//                             Select: ['formatted_address','geometry','name','place_id'],
-//                            From: results,
-//                            where:function(){return this.formatted_address.indexOf("Cobb") > -1}
-//                        }
-//                );
-//
-//        
-//        var queryResult2 =   SQLike.q(
-//                        {
-//                          
-//                             Unpack: results,
-//                                 Columns: ['formatted_address','D','k','name','place_id']
-//                        }
-//                );
-//
-//        
-
-            }
-
+            
 
             function setCurrentMarkImage(latLng) {
 
@@ -215,11 +186,11 @@
 
             var callbackDistanceStartDef = $.Deferred();
             var callbackDistanceEndDef = $.Deferred();
-
-             
+            var service = new google.maps.DistanceMatrixService();  
+            var tempViaPalace ;
             function calculateDistances() {
-                var service = new google.maps.DistanceMatrixService();
-                var tempViaPalace = viaPalace.slice(0, 10);
+                 duplicateRemovedViapoint = removeRedundantAddress(viaPalace)
+                 tempViaPalace = duplicateRemovedViapoint.slice(0, 10);
                 var t =service.getDistanceMatrix(
                         {
                             origins: [initialLocation],
@@ -231,20 +202,7 @@
                         }, callbackDistanceStart);
                         
                 
-                  service.getDistanceMatrix(
-                        {
-                            origins: tempViaPalace,
-                            destinations: [destination],
-                            travelMode: google.maps.TravelMode.DRIVING,
-                            unitSystem: google.maps.UnitSystem.IMPERIAL,
-                            avoidHighways: false,
-                            avoidTolls: false
-                        }, callbackDistanceEnd);
-                
-                  when(callbackDistanceEndDef,callbackDistanceStartDef).then (function(  ) {
-  CreateTable(startLocToViaDistanceTime);
-});
-                          
+                 
                 
                
                         
@@ -275,7 +233,8 @@
                     }
                   
                 }
-                callbackDistanceEndDef.resolve();
+                 CreateTable(startLocToViaDistanceTime);
+                 getfullpath(startLocToViaDistanceTime);
             }
             
 
@@ -294,7 +253,7 @@
                         var results = response.rows[i].elements;
                         // addMarker(origins[i], false);
                         for (var j = 0; j < results.length; j++) {
-                               addMarker(destinations[j], true);
+                              // addMarker(destinations[j], true);
                            // outputDiv.innerHTML += '<li>' + origins[i] + ' to ' + destinations[j]
                                //     + ': ' + results[j].distance.text + ' in '
                                   //  + results[j].duration.text + '</li>'; 
@@ -303,9 +262,55 @@
                     }
                    
                 }
-                callbackDistanceSTartDef.resolve();
+                
+                
+                    service.getDistanceMatrix(
+                        {
+                            origins: tempViaPalace,
+                            destinations: [destination],
+                            travelMode: google.maps.TravelMode.DRIVING,
+                            unitSystem: google.maps.UnitSystem.IMPERIAL,
+                            avoidHighways: false,
+                            avoidTolls: false
+                        }, callbackDistanceEnd);
             }
             
+            
+            function removeRedundantAddress(viaPalace) {
+                
+            /*    var temparray =    SQLike.q(
+                   {
+                        SelectDistinct: ['formatted_address'],
+                        From: viaPalace,
+                        
+                   }
+                )
+              */  
+                return viaPalace;
+
+            }
+
+            function getfullpath(startLocToViaDistanceTime){
+              var temparray =    SQLike.q(
+                   {
+                       Unpack: startLocToViaDistanceTime,
+                       Columns: ['StartLocation','ViaPoint','EndLocation','Distance','Time']
+                   }
+                )
+                 
+               var temparray2=                 SQLike.q(
+                  {
+                      Select: ['*',
+                               function(){return (this.t1_Distance + this.t2_Distance )},'|as|','Total Distance'],
+                      From: {t1:temparray,t2:temparray},
+                      Where: function(){return this.t1.ViaPoint==this.t2.ViaPoint && this.t1.StartLocation != this.t2.StartLocation }
+                  }
+               )
+       
+    
+
+                
+            }
     
             function CreateTable(startLocToViaDistanceTime) {
                
