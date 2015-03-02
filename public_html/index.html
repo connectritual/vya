@@ -57,7 +57,7 @@
                 map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
                 // map = new google.maps.Map(document.getElementById('map-canvas'));
                 // directionsDisplay.setMap(map);
-                placesList = document.getElementById('places');
+               // placesList = document.getElementById('places');
                 setCurrentLocation(map);
 
                 //  setPalacBasedOnSerch(map);
@@ -80,7 +80,7 @@
             }
 
             function callback(results, status, pagination) {
-                console.log(results);
+               // console.log(results);
                 removeRedundantAddress(results)
                 if (status == google.maps.places.PlacesServiceStatus.OK) {
                     for (var i = 0; i < results.length; i++) {
@@ -133,7 +133,7 @@
                     infowindow.open(map, this);
                 });
 
-                placesList.innerHTML += '<li>' + i + " " + place.name + " " + place.formatted_address + '</li>';
+                //placesList.innerHTML += '<li>' + i + " " + place.name + " " + place.formatted_address + '</li>';
 
             }
 
@@ -216,7 +216,7 @@
                 } else {
                     var origins = response.originAddresses;
                     var destinations = response.destinationAddresses;
-                    var outputDiv = document.getElementById('outputDivplaces');
+                   // var outputDiv = document.getElementById('outputDivplaces');
                    // outputDiv.innerHTML = '';
                     //  deleteOverlays();
 
@@ -233,7 +233,7 @@
                     }
                   
                 }
-                 CreateTable(startLocToViaDistanceTime);
+                // CreateTable(startLocToViaDistanceTime);
                  getfullpath(startLocToViaDistanceTime);
             }
             
@@ -245,8 +245,8 @@
                 } else {
                     var origins = response.originAddresses;
                     var destinations = response.destinationAddresses;
-                    var outputDiv = document.getElementById('outputDivplaces');
-                    outputDiv.innerHTML = '';
+//                    var outputDiv = document.getElementById('outputDivplaces');
+//                    outputDiv.innerHTML = '';
                     //  deleteOverlays();
 
                     for (var i = 0; i < origins.length; i++) {
@@ -278,14 +278,37 @@
             
             function removeRedundantAddress(viaPalace) {
                 
-            /*    var temparray =    SQLike.q(
+                var temparray =    SQLike.q(
                    {
                         SelectDistinct: ['formatted_address'],
-                        From: viaPalace,
+                        From: viaPalace
                         
                    }
                 )
-              */  
+                   
+//        
+////                var uniqueViaPoint =    SQLike.q(
+////                   {
+////                        Select: [function() {return this.id},'|as|','id'],
+////                        From: temparray
+////                        
+////                   }
+////                )
+//               
+//                  var uniqueViaPoint =   SQLike.q(
+//                    {
+//                        Select: ['t1.*'],
+//                        From: {t1:viaPalace,t2:temparray},
+//                         Where: function(){return this.t1.id==this.t2.id.id}
+//                    }
+//                 )
+//               
+//                    SQLike.q(
+//                   {
+//                       Pack: uniqueViaPoint,
+//                       Columns: ['id']
+//                   }
+//                )
                 return viaPalace;
 
             }
@@ -301,13 +324,15 @@
                var temparray2=                 SQLike.q(
                   {
                       Select: ['*',
-                               function(){return (this.t1_Distance + this.t2_Distance )},'|as|','Total Distance'],
+                               function(){return (getNumberFromString(this.t1_Distance) + getNumberFromString(this.t2_Distance) )},'|as|','Total Distance',
+                               function(){return (getNumberFromString(this.t1_Time) + getNumberFromString(this.t2_Time) )},'|as|','Total Time'
+                           ],
                       From: {t1:temparray,t2:temparray},
                       Where: function(){return this.t1.ViaPoint==this.t2.ViaPoint && this.t1.StartLocation != this.t2.StartLocation }
                   }
                )
        
-    
+       createTableFullPath(temparray2);
 
                 
             }
@@ -329,22 +354,40 @@
                       ],
                      "aaSorting": [[ 3, "asc" ]] 
                 } );
-        
-    /*    $('#datatable').dataTable( {
-        "aaData": [    ["1","a1","a2","a3"],
-          ["2","b1","b2","b3"],
-          ["3","c1","c2","c3"]],
-        "aoColumns": [
-            { "sTitle": "Engine" },
-            { "sTitle": "Browser" },
-            { "sTitle": "Platform" },
-            { "sTitle": "Version", "class": "center" },
-            { "sTitle": "Grade", "class": "center" }
-        ]
-    } );   */
-        
-
+            }
+          function createTableFullPath(startLocToViaDistanceTime) {
+               
+               if( $('#datatable') != null )
+                      $('#dataGrid').html( '<table cellpadding="0" cellspacing="0" border="0" class="display" id="datatable"></table>' );
  
+               $('#datatable').dataTable( {
+                    "aaData": startLocToViaDistanceTime ,
+                     "paging": false,
+                     "aoColumns":[
+                         
+                            {"sTitle": "t1_StartLocation",  "mData": "t1_StartLocation" },
+                            {"sTitle": "t1_ViaPoint", "mData": "t1_ViaPoint" },
+                            {"sTitle": "t1_EndLocation" ,"mData": "t1_EndLocation" },
+                            {"sTitle": "t1_Distance" , "mData": "t1_Distance" },
+                            {"sTitle": "t1_Time" , "mData": "t1_Time" },
+                            {"sTitle": "t2_StartLocation", "mData": "t2_StartLocation" },
+                            {"sTitle": "t2_ViaPoint", "mData": "t2_ViaPoint" },
+                            {"sTitle": "t2_EndLocation", "mData": "t2_EndLocation" },
+                            {"sTitle": "t2_Distance", "mData": "t2_Distance" },
+                            {"sTitle": "t2_Time", "mData": "t2_Time" },
+                            {"sTitle": "Total Distance", "mData": "Total Distance" },
+                            {"sTitle": "Total Time", "mData": "Total Time" }
+                           
+                     ],
+                     "aaSorting": [[11, "asc" ]]
+                } );
+        
+    
+            }
+            
+            function getNumberFromString(str){
+                return parseFloat(str);
+                
             }
             google.maps.event.addDomListener(window, 'load', initialize);
 
@@ -425,21 +468,17 @@
 
         <div id="map-canvas">
         </div>
-        <div id="results">
-            <h2>Results</h2>
-            <ul id="places"></ul>
-            <!--button id="more">More results</button-->
-        </div>
+        
         <div id="input">
             <input type="text" id="Start_location">
             <input type="text" id="Destination_location">
             <button id="search">GO</button>
         </div>
 
-        <div id="outputDiv">
+<!--        <div id="outputDiv">
             <h2>Output</h2>
             <ul id="outputDivplaces"></ul>
-        </div>
+        </div>-->
 
         <div id="dataGrid"  z-index="5">
             <h2>dataGrid</h2>
