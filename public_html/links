@@ -29,3 +29,13 @@ https://maps.googleapis.com/maps/api/distancematrix/json?origins=33.9308089,-84.
 https://maps.googleapis.com/maps/api/distancematrix/json?origins=33.9308089,-84.43382339999999&destinations=34.1195032,-84.1113094&waypoints=walmart
 
 https://www.google.com/patents/US8781729
+
+
+
+Currently we need to remove the dupicate from viapoint.
+
+Auto complete textbox for map src="https://www.youtube.com/embed/lSdM3yZkj1w"
+
+http://googlewebcomponents.github.io/google-youtube-video-wall/components/google-youtube-video-wall/demo.html
+
+
