@@ -23,6 +23,8 @@
         </style>
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places"></script>
         <script src="/vya/SQLike.js"></script>
+        <script src="/vya/MapDistance.js"></script>
+        
         <!--jquery datatable.-->    
         <script data-require="jquery" data-semver="2.0.3" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
         <link data-require="datatables@*" data-semver="1.9.4" rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/datatables/1.9.4/css/jquery.dataTables_themeroller.css" />
@@ -61,7 +63,7 @@
                 setCurrentLocation(map);
 
                 //  setPalacBasedOnSerch(map);
-
+             
 
             }
 
@@ -81,10 +83,10 @@
 
             function callback(results, status, pagination) {
                 // console.log(results);
-                removeRedundantAddress(results)
+                //removeRedundantAddress(results)
                 if (status == google.maps.places.PlacesServiceStatus.OK) {
                     for (var i = 0; i < results.length; i++) {
-                        
+                        viaPalaces.push(results[i].geometry.location);
                         createMarker(results[i], i);
                     }
                 }
@@ -188,6 +190,7 @@
             var callbackDistanceEndDef = $.Deferred();
             var service = new google.maps.DistanceMatrixService();
             var tempViaPalace;
+            
             function calculateDistances() {
                 duplicateRemovedViapoint = removeRedundantAddress(viaPalaces)
                 tempViaPalace = duplicateRemovedViapoint.slice(0, 10);
@@ -200,12 +203,6 @@
                             avoidHighways: false,
                             avoidTolls: false
                         }, callbackDistanceStart);
-
-
-
-
-
-
             }
 
 
@@ -279,7 +276,7 @@
             function removeRedundantAddress(viaPalaces) {
 
                 // get the unique address.    
-                var temparray = SQLike.q(
+        /*        var temparray = SQLike.q(
                         {
                             SelectDistinct: ['formatted_address'],
                             From: viaPalaces
@@ -306,8 +303,8 @@
 
                     }
                 });
-
-                return returnArrayObject;
+*/
+                return viaPalaces;
 
             }
 
